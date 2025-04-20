@@ -1,78 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   Cell
 } from 'recharts';
-import './App.css';
+import apiService from '../services/api.service';
 
 // API configuration
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 axios.defaults.withCredentials = true;
-
-// Authentication components
-const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, { username, password });
-      localStorage.setItem('authToken', response.data.token);
-      window.location.href = '/dashboard';
-    } catch (err) {
-      setError('Invalid username or password');
-    }
-  };
-  
-  return (
-    <div className="login-container">
-      <div className="login-form">
-        <h2>Esports Security Dashboard</h2>
-        {error && <div className="error-message">{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Username</label>
-            <input 
-              type="text" 
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Password</label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit" className="login-button">Login</button>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-// Protected Route Wrapper
-const ProtectedRoute = ({ children }) => {
-  const authToken = localStorage.getItem('authToken');
-  
-  if (!authToken) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return children;
-};
 
 // Dashboard components
 const Sidebar = ({ activeItem, setActiveItem }) => {
+  const navigate = useNavigate();
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'alerts', label: 'Alerts', icon: '🚨' },
@@ -83,7 +25,7 @@ const Sidebar = ({ activeItem, setActiveItem }) => {
   
   const handleLogout = () => {
     localStorage.removeItem('authToken');
-    window.location.href = '/login';
+    navigate('/login');
   };
   
   return (
@@ -181,7 +123,7 @@ const Overview = () => {
     // In a real application, these would be API calls
     const fetchStats = async () => {
       try {
-        // const response = await axios.get(`${API_BASE_URL}/stats`);
+        // const response = await apiService.getStats();
         // setStats(response.data);
         
         // Simulate data for demo
@@ -222,7 +164,7 @@ const Overview = () => {
     
     const fetchRecentAlerts = async () => {
       try {
-        // const response = await axios.get(`${API_BASE_URL}/alerts/recent`);
+        // const response = await apiService.getRecentAlerts(5);
         // setRecentAlerts(response.data);
         
         // Simulate data for demo
@@ -370,6 +312,167 @@ const Overview = () => {
                 </tr>
               ))}
             </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Alerts component
+const Alerts = () => {
+  const [alerts, setAlerts] = useState([]);
+  const [filter, setFilter] = useState({
+    severity: 'all',
+    acknowledged: 'all',
+    timeRange: '24h'
+  });
+  
+  useEffect(() => {
+    // In a real application, this would be an API call with filters
+    const fetchAlerts = async () => {
+      try {
+        // const response = await apiService.getAlerts(filter);
+        // setAlerts(response.data);
+        
+        // Simulate data for demo
+        setAlerts([
+          { id: 1, device_id: 'kb-001', device_type: 'keyboard', alert_type: 'unusual_typing_pattern', severity: 'medium', timestamp: '2025-04-17T14:32:15', acknowledged: false, description: 'Unusual typing pattern detected - potential automated input' },
+          { id: 2, device_id: 'router-005', device_type: 'router', alert_type: 'network_anomaly', severity: 'critical', timestamp: '2025-04-17T14:30:22', acknowledged: false, description: 'Suspicious network traffic spike detected - possible DDoS attempt' },
+          { id: 3, device_id: 'mouse-003', device_type: 'mouse', alert_type: 'unusual_mouse_movement', severity: 'high', timestamp: '2025-04-17T14:28:45', acknowledged: false, description: 'Unusual mouse movement pattern detected - potential automation' },
+          { id: 4, device_id: 'temp-002', device_type: 'temp_sensor', alert_type: 'temperature_anomaly', severity: 'low', timestamp: '2025-04-17T14:25:10', acknowledged: true, description: 'Unusual temperature fluctuation detected in server area' },
+          { id: 5, device_id: 'motion-007', device_type: 'motion_sensor', alert_type: 'motion_anomaly', severity: 'medium', timestamp: '2025-04-17T14:20:35', acknowledged: true, description: 'Motion detected in restricted area outside of authorized hours' },
+          { id: 6, device_id: 'switch-002', device_type: 'switch', alert_type: 'network_anomaly', severity: 'high', timestamp: '2025-04-17T13:45:12', acknowledged: false, description: 'Unusual packet loss detected - potential hardware failure or tampering' },
+          { id: 7, device_id: 'kb-004', device_type: 'keyboard', alert_type: 'unusual_typing_pattern', severity: 'low', timestamp: '2025-04-17T13:30:45', acknowledged: true, description: 'Unusual key combination sequence detected' },
+          { id: 8, device_id: 'router-001', device_type: 'router', alert_type: 'network_anomaly', severity: 'critical', timestamp: '2025-04-17T12:22:33', acknowledged: false, description: 'Multiple failed authentication attempts detected - possible brute force attack' },
+          { id: 9, device_id: 'temp-001', device_type: 'temp_sensor', alert_type: 'temperature_anomaly', severity: 'high', timestamp: '2025-04-17T11:48:21', acknowledged: true, description: 'Rapid temperature increase detected - potential cooling system failure' },
+          { id: 10, device_id: 'mouse-002', device_type: 'mouse', alert_type: 'unusual_mouse_movement', severity: 'medium', timestamp: '2025-04-17T10:35:10', acknowledged: false, description: 'Unusual precision and speed in mouse movements detected' }
+        ]);
+      } catch (error) {
+        console.error('Error fetching alerts:', error);
+      }
+    };
+    
+    fetchAlerts();
+    
+    // Set up polling for real-time updates
+    const alertsPoll = setInterval(fetchAlerts, 10000);
+    
+    return () => clearInterval(alertsPoll);
+  }, [filter]);
+  
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilter(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleAcknowledge = async (alertId) => {
+    try {
+      // In a real application, this would be an API call
+      // await apiService.acknowledgeAlert(alertId);
+      
+      // Update local state
+      setAlerts(alerts.map(alert => 
+        alert.id === alertId ? { ...alert, acknowledged: true } : alert
+      ));
+    } catch (error) {
+      console.error('Error acknowledging alert:', error);
+    }
+  };
+  
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString();
+  };
+  
+  return (
+    <div className="alerts-container">
+      <div className="filters-bar">
+        <div className="filter-group">
+          <label>Severity:</label>
+          <select 
+            name="severity" 
+            value={filter.severity} 
+            onChange={handleFilterChange}
+          >
+            <option value="all">All</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        
+        <div className="filter-group">
+          <label>Status:</label>
+          <select 
+            name="acknowledged" 
+            value={filter.acknowledged} 
+            onChange={handleFilterChange}
+          >
+            <option value="all">All</option>
+            <option value="false">New</option>
+            <option value="true">Acknowledged</option>
+          </select>
+        </div>
+        
+        <div className="filter-group">
+          <label>Time Range:</label>
+          <select 
+            name="timeRange" 
+            value={filter.timeRange} 
+            onChange={handleFilterChange}
+          >
+            <option value="1h">Last Hour</option>
+            <option value="6h">Last 6 Hours</option>
+            <option value="24h">Last 24 Hours</option>
+            <option value="7d">Last 7 Days</option>
+          </select>
+        </div>
+      </div>
+      
+      <div className="alerts-table-container">
+        <table className="alerts-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Time</th>
+              <th>Device</th>
+              <th>Alert Type</th>
+              <th>Severity</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {alerts.map(alert => (
+              <tr key={alert.id} className={`alert-row ${alert.severity}`}>
+                <td>{alert.id}</td>
+                <td>{formatTimestamp(alert.timestamp)}</td>
+                <td>{alert.device_id} ({alert.device_type})</td>
+                <td>{alert.alert_type.replace(/_/g, ' ')}</td>
+                <td>
+                  <span className={`severity-badge ${alert.severity}`}>
+                    {alert.severity}
+                  </span>
+                </td>
+                <td>{alert.description}</td>
+                <td>{alert.acknowledged ? 'Acknowledged' : 'New'}</td>
+                <td>
+                  <button className="view-btn">View Details</button>
+                  {!alert.acknowledged && (
+                    <button 
+                      className="ack-btn"
+                      onClick={() => handleAcknowledge(alert.id)}
+                    >
+                      Acknowledge
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
     </div>
@@ -389,7 +492,7 @@ const Devices = () => {
     // In a real application, this would be an API call
     const fetchDevices = async () => {
       try {
-        // const response = await axios.get(`${API_BASE_URL}/devices`, { params: filter });
+        // const response = await apiService.getDevices(filter);
         // setDevices(response.data);
         
         // Simulate data for demo
@@ -575,7 +678,7 @@ const Analytics = () => {
     // In a real application, this would be an API call
     const fetchAnalyticsData = async () => {
       try {
-        // const response = await axios.get(`${API_BASE_URL}/analytics`, { params: { timeRange } });
+        // const response = await apiService.getAnalytics(timeRange);
         // setChartData(response.data);
         
         // Simulate data for demo
@@ -762,416 +865,3 @@ const Analytics = () => {
     </div>
   );
 };
-
-// Settings component
-const Settings = () => {
-  const [settings, setSettings] = useState({
-    notifications: {
-      email: true,
-      sms: false,
-      slack: true,
-      criticalOnly: false
-    },
-    security: {
-      twoFactorAuth: true,
-      sessionTimeout: 30,
-      logLevel: 'info'
-    },
-    system: {
-      dataRetention: 90,
-      backupFrequency: 'daily',
-      alertThreshold: 'medium'
-    }
-  });
-  
-  const handleSettingChange = (category, setting, value) => {
-    setSettings(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [setting]: value
-      }
-    }));
-  };
-  
-  const handleSaveSettings = async () => {
-    try {
-      // In a real application, this would be an API call
-      // await axios.post(`${API_BASE_URL}/settings`, settings);
-      alert('Settings saved successfully!');
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      alert('Error saving settings. Please try again.');
-    }
-  };
-  
-  return (
-    <div className="settings-container">
-      <h2>System Settings</h2>
-      
-      <div className="settings-section">
-        <h3>Notification Settings</h3>
-        <div className="settings-grid">
-          <div className="setting-item">
-            <span className="setting-label">Email Notifications</span>
-            <label className="toggle-switch">
-              <input 
-                type="checkbox" 
-                checked={settings.notifications.email} 
-                onChange={(e) => handleSettingChange('notifications', 'email', e.target.checked)} 
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-          
-          <div className="setting-item">
-            <span className="setting-label">SMS Notifications</span>
-            <label className="toggle-switch">
-              <input 
-                type="checkbox" 
-                checked={settings.notifications.sms} 
-                onChange={(e) => handleSettingChange('notifications', 'sms', e.target.checked)} 
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-          
-          <div className="setting-item">
-            <span className="setting-label">Slack Notifications</span>
-            <label className="toggle-switch">
-              <input 
-                type="checkbox" 
-                checked={settings.notifications.slack} 
-                onChange={(e) => handleSettingChange('notifications', 'slack', e.target.checked)} 
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-          
-          <div className="setting-item">
-            <span className="setting-label">Critical Alerts Only</span>
-            <label className="toggle-switch">
-              <input 
-                type="checkbox" 
-                checked={settings.notifications.criticalOnly} 
-                onChange={(e) => handleSettingChange('notifications', 'criticalOnly', e.target.checked)} 
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-      
-      <div className="settings-section">
-        <h3>Security Settings</h3>
-        <div className="settings-grid">
-          <div className="setting-item">
-            <span className="setting-label">Two-Factor Authentication</span>
-            <label className="toggle-switch">
-              <input 
-                type="checkbox" 
-                checked={settings.security.twoFactorAuth} 
-                onChange={(e) => handleSettingChange('security', 'twoFactorAuth', e.target.checked)} 
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-          
-          <div className="setting-item">
-            <span className="setting-label">Session Timeout (minutes)</span>
-            <select 
-              value={settings.security.sessionTimeout} 
-              onChange={(e) => handleSettingChange('security', 'sessionTimeout', parseInt(e.target.value))}
-            >
-              <option value={15}>15</option>
-              <option value={30}>30</option>
-              <option value={60}>60</option>
-              <option value={120}>120</option>
-            </select>
-          </div>
-          
-          <div className="setting-item">
-            <span className="setting-label">Log Level</span>
-            <select 
-              value={settings.security.logLevel} 
-              onChange={(e) => handleSettingChange('security', 'logLevel', e.target.value)}
-            >
-              <option value="debug">Debug</option>
-              <option value="info">Info</option>
-              <option value="warning">Warning</option>
-              <option value="error">Error</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      
-      <div className="settings-section">
-        <h3>System Settings</h3>
-        <div className="settings-grid">
-          <div className="setting-item">
-            <span className="setting-label">Data Retention (days)</span>
-            <select 
-              value={settings.system.dataRetention} 
-              onChange={(e) => handleSettingChange('system', 'dataRetention', parseInt(e.target.value))}
-            >
-              <option value={30}>30</option>
-              <option value={60}>60</option>
-              <option value={90}>90</option>
-              <option value={180}>180</option>
-              <option value={365}>365</option>
-            </select>
-          </div>
-          
-          <div className="setting-item">
-            <span className="setting-label">Backup Frequency</span>
-            <select 
-              value={settings.system.backupFrequency} 
-              onChange={(e) => handleSettingChange('system', 'backupFrequency', e.target.value)}
-            >
-              <option value="hourly">Hourly</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
-          </div>
-          
-          <div className="setting-item">
-            <span className="setting-label">Alert Threshold</span>
-            <select 
-              value={settings.system.alertThreshold} 
-              onChange={(e) => handleSettingChange('system', 'alertThreshold', e.target.value)}
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="critical">Critical Only</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      
-      <div className="settings-actions">
-        <button className="btn primary" onClick={handleSaveSettings}>Save Settings</button>
-        <button className="btn secondary">Reset to Defaults</button>
-      </div>
-    </div>
-  );
-};
-
-// Main Dashboard component
-const Dashboard = () => {
-  const [activeItem, setActiveItem] = useState('overview');
-  
-  // Render different content based on active menu item
-  const renderContent = () => {
-    switch (activeItem) {
-      case 'overview':
-        return <Overview />;
-      case 'alerts':
-        return <Alerts />;
-      case 'devices':
-        return <Devices />;
-      case 'analytics':
-        return <Analytics />;
-      case 'settings':
-        return <Settings />;
-      default:
-        return <Overview />;
-    }
-  };
-  
-  return (
-    <div className="dashboard-container">
-      <Sidebar activeItem={activeItem} setActiveItem={setActiveItem} />
-      <div className="dashboard-content">
-        <Header activeItem={activeItem} />
-        <div className="content-area">
-          {renderContent()}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Main App component
-const App = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Router>
-  );
-};
-
-export default App;
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Alerts component
-const Alerts = () => {
-  const [alerts, setAlerts] = useState([]);
-  const [filter, setFilter] = useState({
-    severity: 'all',
-    acknowledged: 'all',
-    timeRange: '24h'
-  });
-  
-  useEffect(() => {
-    // In a real application, this would be an API call with filters
-    const fetchAlerts = async () => {
-      try {
-        // const response = await axios.get(`${API_BASE_URL}/alerts`, { params: filter });
-        // setAlerts(response.data);
-        
-        // Simulate data for demo
-        setAlerts([
-          { id: 1, device_id: 'kb-001', device_type: 'keyboard', alert_type: 'unusual_typing_pattern', severity: 'medium', timestamp: '2025-04-17T14:32:15', acknowledged: false, description: 'Unusual typing pattern detected - potential automated input' },
-          { id: 2, device_id: 'router-005', device_type: 'router', alert_type: 'network_anomaly', severity: 'critical', timestamp: '2025-04-17T14:30:22', acknowledged: false, description: 'Suspicious network traffic spike detected - possible DDoS attempt' },
-          { id: 3, device_id: 'mouse-003', device_type: 'mouse', alert_type: 'unusual_mouse_movement', severity: 'high', timestamp: '2025-04-17T14:28:45', acknowledged: false, description: 'Unusual mouse movement pattern detected - potential automation' },
-          { id: 4, device_id: 'temp-002', device_type: 'temp_sensor', alert_type: 'temperature_anomaly', severity: 'low', timestamp: '2025-04-17T14:25:10', acknowledged: true, description: 'Unusual temperature fluctuation detected in server area' },
-          { id: 5, device_id: 'motion-007', device_type: 'motion_sensor', alert_type: 'motion_anomaly', severity: 'medium', timestamp: '2025-04-17T14:20:35', acknowledged: true, description: 'Motion detected in restricted area outside of authorized hours' },
-          { id: 6, device_id: 'switch-002', device_type: 'switch', alert_type: 'network_anomaly', severity: 'high', timestamp: '2025-04-17T13:45:12', acknowledged: false, description: 'Unusual packet loss detected - potential hardware failure or tampering' },
-          { id: 7, device_id: 'kb-004', device_type: 'keyboard', alert_type: 'unusual_typing_pattern', severity: 'low', timestamp: '2025-04-17T13:30:45', acknowledged: true, description: 'Unusual key combination sequence detected' },
-          { id: 8, device_id: 'router-001', device_type: 'router', alert_type: 'network_anomaly', severity: 'critical', timestamp: '2025-04-17T12:22:33', acknowledged: false, description: 'Multiple failed authentication attempts detected - possible brute force attack' },
-          { id: 9, device_id: 'temp-001', device_type: 'temp_sensor', alert_type: 'temperature_anomaly', severity: 'high', timestamp: '2025-04-17T11:48:21', acknowledged: true, description: 'Rapid temperature increase detected - potential cooling system failure' },
-          { id: 10, device_id: 'mouse-002', device_type: 'mouse', alert_type: 'unusual_mouse_movement', severity: 'medium', timestamp: '2025-04-17T10:35:10', acknowledged: false, description: 'Unusual precision and speed in mouse movements detected' }
-        ]);
-      } catch (error) {
-        console.error('Error fetching alerts:', error);
-      }
-    };
-    
-    fetchAlerts();
-    
-    // Set up polling for real-time updates
-    const alertsPoll = setInterval(fetchAlerts, 10000);
-    
-    return () => clearInterval(alertsPoll);
-  }, [filter]);
-  
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilter(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleAcknowledge = async (alertId) => {
-    try {
-      // In a real application, this would be an API call
-      // await axios.post(`${API_BASE_URL}/alerts/${alertId}/acknowledge`);
-      
-      // Update local state
-      setAlerts(alerts.map(alert => 
-        alert.id === alertId ? { ...alert, acknowledged: true } : alert
-      ));
-    } catch (error) {
-      console.error('Error acknowledging alert:', error);
-    }
-  };
-  
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString();
-  };
-  
-  return (
-    <div className="alerts-container">
-      <div className="filters-bar">
-        <div className="filter-group">
-          <label>Severity:</label>
-          <select 
-            name="severity" 
-            value={filter.severity} 
-            onChange={handleFilterChange}
-          >
-            <option value="all">All</option>
-            <option value="critical">Critical</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-        </div>
-        
-        <div className="filter-group">
-          <label>Status:</label>
-          <select 
-            name="acknowledged" 
-            value={filter.acknowledged} 
-            onChange={handleFilterChange}
-          >
-            <option value="all">All</option>
-            <option value="false">New</option>
-            <option value="true">Acknowledged</option>
-          </select>
-        </div>
-        
-        <div className="filter-group">
-          <label>Time Range:</label>
-          <select 
-            name="timeRange" 
-            value={filter.timeRange} 
-            onChange={handleFilterChange}
-          >
-            <option value="1h">Last Hour</option>
-            <option value="6h">Last 6 Hours</option>
-            <option value="24h">Last 24 Hours</option>
-            <option value="7d">Last 7 Days</option>
-          </select>
-        </div>
-      </div>
-      
-      <div className="alerts-table-container">
-        <table className="alerts-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Time</th>
-              <th>Device</th>
-              <th>Alert Type</th>
-              <th>Severity</th>
-              <th>Description</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {alerts.map(alert => (
-              <tr key={alert.id} className={`alert-row ${alert.severity}`}>
-                <td>{alert.id}</td>
-                <td>{formatTimestamp(alert.timestamp)}</td>
-                <td>{alert.device_id} ({alert.device_type})</td>
-                <td>{alert.alert_type.replace(/_/g, ' ')}</td>
-                <td>
-                  <span className={`severity-badge ${alert.severity}`}>
-                    {alert.severity}
-                  </span>
-                </td>
-                <td>{alert.description}</td>
-                <td>{alert.acknowledged ? 'Acknowledged' : 'New'}</td>
-                <td>
-                  <button className="view-btn">View Details</button>
-                  {!alert.acknowledged && (
-                    <button 
-                      className="ack-btn"
-                      onClick={() => handleAcknowledge(alert.id)}
-                    >
-                      Acknowledge
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
