@@ -1,0 +1,4 @@
+flask>=2.0.1
+flask-limiter>=1.4
+pyjwt>=2.1.0
+cryptography>=3.4.7
